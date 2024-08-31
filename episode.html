@@ -11,27 +11,73 @@
             padding: 0;
             background-color: #f0f0f0;
         }
-        iframe {
-            width: 100%;
-            height: 100vh;
-            border: none;
-        }
         .container {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        iframe {
+            width: 80%;
+            height: 60vh;
+            border: none;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-bottom: 20px;
+        }
+        .controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .controls button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+        .episode-list {
+            list-style: none;
+            padding: 0;
+            text-align: center;
+        }
+        .episode-list a {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 18px;
+            margin: 0 10px;
+        }
+        .episode-list a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <iframe id="videoFrame" src="" allowfullscreen></iframe>
+
+        <div class="controls">
+            <button id="prevBtn" disabled>Previous Episode</button>
+            <button id="nextBtn" disabled>Next Episode</button>
+        </div>
+
+        <ul class="episode-list">
+            <li><a href="index.html">Back to List</a></li>
+        </ul>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const episodeId = window.location.hash.substring(1); // Mendapatkan hash ID dari URL
+            const episodeId = window.location.hash.substring(1);
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
             if (episodeId) {
                 fetch('data.json')
                     .then(response => response.json())
@@ -40,6 +86,17 @@
                         if (driveUrl) {
                             const fileId = driveUrl.split('/d/')[1].split('/')[0];
                             document.getElementById('videoFrame').src = `https://drive.google.com/file/d/${fileId}/preview`;
+
+                            // Handle Previous and Next buttons
+                            const episodeNumber = parseInt(episodeId, 10);
+                            if (episodeNumber > 1) {
+                                prevBtn.disabled = false;
+                                prevBtn.onclick = () => window.location.hash = `#${episodeNumber - 1}`;
+                            }
+                            if (episodeNumber < 48) {
+                                nextBtn.disabled = false;
+                                nextBtn.onclick = () => window.location.hash = `#${episodeNumber + 1}`;
+                            }
                         } else {
                             document.getElementById('videoFrame').innerHTML = 'Episode tidak ditemukan';
                         }
