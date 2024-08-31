@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Episode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <iframe id="videoFrame" src="" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const episodeId = window.location.hash.substring(1); // Mendapatkan hash ID dari URL
+            if (episodeId) {
+                fetch('data.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        const driveUrl = data[episodeId];
+                        if (driveUrl) {
+                            const fileId = driveUrl.split('/d/')[1].split('/')[0];
+                            document.getElementById('videoFrame').src = `https://drive.google.com/file/d/${fileId}/preview`;
+                        } else {
+                            document.getElementById('videoFrame').innerHTML = 'Episode tidak ditemukan';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading data.json:', error);
+                        document.getElementById('videoFrame').innerHTML = 'Terjadi kesalahan';
+                    });
+            } else {
+                document.getElementById('videoFrame').innerHTML = 'ID episode tidak valid';
+            }
+        });
+    </script>
+</body>
+</html>
