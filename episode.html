@@ -3,89 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Episode</title>
+    <title>Episode Player</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
         }
         h1 {
-            margin-bottom: 20px;
+            margin-top: 20px;
+            text-align: center;
         }
         iframe {
-            width: 100%;
-            height: 500px;
-            border: none;
+            width: 90%;
+            height: 60vh;
             margin-bottom: 20px;
+            border: none;
         }
         .controls {
             display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
+            justify-content: space-between;
+            width: 90%;
+            margin-top: 10px;
         }
-        .controls a {
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
+        .controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .controls a.disabled {
-            background-color: #cccccc;
-            pointer-events: none;
+        .controls .episode-list {
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
-    <h1 id="episode-title">Episode #</h1>
-    <iframe id="episode-frame"></iframe>
 
+    <h1 id="episode-title">Episode #</h1>
+    <iframe id="video-player" src="" allowfullscreen></iframe>
+    
     <div class="controls">
-        <a id="prev-episode" href="#" class="disabled">Previous Episode</a>
-        <a id="episode-list" href="index.html">Episode List</a>
-        <a id="next-episode" href="#" class="disabled">Next Episode</a>
+        <button id="prev-button">Previous Episode</button>
+        <a href="index.html" class="episode-list">Episode List</a>
+        <button id="next-button">Next Episode</button>
     </div>
 
     <script>
-        // Mendapatkan ID dari hash
-        const episodeId = window.location.hash.substring(1);
+        // Ambil hash dari URL
+        const hash = window.location.hash.substring(1);
         const episodeTitle = document.getElementById('episode-title');
-        const episodeFrame = document.getElementById('episode-frame');
-        const prevEpisode = document.getElementById('prev-episode');
-        const nextEpisode = document.getElementById('next-episode');
-
-        // Mengambil data dari data.json
+        const iframe = document.getElementById('video-player');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        
+        // Load data.json
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
-                if (data[episodeId]) {
-                    // Menampilkan nomor episode
-                    episodeTitle.textContent = `Episode #${episodeId}`;
-
-                    // Menampilkan iframe
-                    episodeFrame.src = data[episodeId];
-
-                    // Mengatur tombol previous dan next
-                    if (data[parseInt(episodeId) - 1]) {
-                        prevEpisode.href = `episode.html#${parseInt(episodeId) - 1}`;
-                        prevEpisode.classList.remove('disabled');
-                    }
-                    if (data[parseInt(episodeId) + 1]) {
-                        nextEpisode.href = `episode.html#${parseInt(episodeId) + 1}`;
-                        nextEpisode.classList.remove('disabled');
-                    }
+                // Set episode title and iframe source based on hash
+                if (data[hash]) {
+                    episodeTitle.textContent = `Episode ${hash}`;
+                    iframe.src = data[hash];
                 } else {
-                    episodeTitle.textContent = 'Episode Not Found';
-                    episodeFrame.style.display = 'none';
+                    episodeTitle.textContent = 'Episode not found';
+                    iframe.src = '';
+                }
+
+                // Disable previous button if on the first episode
+                if (parseInt(hash) === 1) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.addEventListener('click', () => {
+                        window.location.hash = `#${parseInt(hash) - 1}`;
+                        window.location.reload();
+                    });
+                }
+
+                // Disable next button if on the last episode
+                if (parseInt(hash) === Object.keys(data).length) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.addEventListener('click', () => {
+                        window.location.hash = `#${parseInt(hash) + 1}`;
+                        window.location.reload();
+                    });
                 }
             });
-
-        // Memaksa refresh saat pindah hash
-        window.addEventListener('hashchange', () => {
-            location.reload();
-        });
     </script>
+
 </body>
 </html>
