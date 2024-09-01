@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Episode</title>
+    <title>Episode Viewer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,139 +12,89 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            background-color: #f0f0f0;
         }
-
         #episode-title {
-            margin: 20px 0;
+            margin-top: 10px;
             font-size: 24px;
             font-weight: bold;
         }
-
         iframe {
-            width: 80%;
-            height: 50vh;
+            width: 100%;
+            height: 60vh;
+            max-width: 800px;
             border: none;
             margin-top: 10px;
         }
-
-        .controls {
-            margin-top: 20px;
+        #controls {
+            margin-top: 10px;
             display: flex;
             justify-content: space-between;
-            width: 80%;
+            width: 100%;
+            max-width: 800px;
         }
-
-        .controls button {
+        #controls button {
             padding: 10px 20px;
             font-size: 16px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
         }
-
-        .controls button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        #episode-list {
+            margin-top: 20px;
+            text-align: center;
         }
-
-        .controls .episode-list {
-            margin: 0 10px;
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .episode-list a {
-            text-decoration: none;
-            font-size: 16px;
-            color: #007bff;
-        }
-
-        /* Responsive adjustments */
-        @media only screen and (max-width: 768px) {
+        @media (max-width: 768px) {
             iframe {
-                width: 100%;
-                height: 60vh;
-            }
-
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .controls button, .episode-list a {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .episode-list {
-                order: -1;
+                height: 40vh;
             }
         }
     </style>
 </head>
 <body>
-
     <div id="episode-title">Episode 1</div>
-    <iframe id="episode-frame" src=""></iframe>
-
-    <div class="controls">
-        <button id="prev-btn">Previous Episode</button>
-        <div class="episode-list"><a href="index.html">List of Episodes</a></div>
-        <button id="next-btn">Next Episode</button>
+    <iframe id="episode-frame" src="" allowfullscreen></iframe>
+    <div id="controls">
+        <button id="prev-btn" onclick="navigateEpisode(-1)">Previous Episode</button>
+        <button id="next-btn" onclick="navigateEpisode(1)">Next Episode</button>
     </div>
+    <div id="episode-list"><a href="index.html">Back to Episode List</a></div>
 
     <script>
-        const hash = window.location.hash.substring(1);
-        const episodeNumber = parseInt(hash) || 1;
-        const iframe = document.getElementById('episode-frame');
-        const episodeTitle = document.getElementById('episode-title');
+        const episodes = {}; // Data will be loaded here
 
-        // Fetch data from data.json
-        fetch('data.json')
+        // Fetch data from links.json
+        fetch('links.json')
             .then(response => response.json())
             .then(data => {
-                const episodeData = data[episodeNumber];
-
-                if (episodeData) {
-                    // Update iframe and title based on the current episode
-                    iframe.src = episodeData.url.replace("/view", "/preview");
-                    episodeTitle.textContent = `Episode ${episodeNumber}`;
-                } else {
-                    episodeTitle.textContent = `Episode not found`;
-                }
-
-                // Button actions
-                const prevBtn = document.getElementById('prev-btn');
-                const nextBtn = document.getElementById('next-btn');
-
-                prevBtn.disabled = episodeNumber <= 1;
-                nextBtn.disabled = episodeNumber >= Object.keys(data).length;
-
-                prevBtn.addEventListener('click', () => {
-                    if (episodeNumber > 1) {
-                        window.location.hash = `#${episodeNumber - 1}`;
-                        window.location.reload(); // Refresh to load the new video
-                    }
-                });
-
-                nextBtn.addEventListener('click', () => {
-                    if (episodeNumber < Object.keys(data).length) {
-                        window.location.hash = `#${episodeNumber + 1}`;
-                        window.location.reload(); // Refresh to load the new video
-                    }
-                });
+                Object.assign(episodes, data);
+                loadEpisode();
             })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-                episodeTitle.textContent = 'Error loading episode data';
-            });
+            .catch(error => console.error('Error loading episode data:', error));
+
+        function loadEpisode() {
+            const hash = window.location.hash.substring(1);
+            const episodeNumber = parseInt(hash, 10) || 1;
+            const episodeUrl = episodes[episodeNumber];
+
+            if (episodeUrl) {
+                document.getElementById('episode-title').textContent = `Episode ${episodeNumber}`;
+                document.getElementById('episode-frame').src = episodeUrl;
+                updateButtons(episodeNumber);
+            }
+        }
+
+        function updateButtons(episodeNumber) {
+            document.getElementById('prev-btn').disabled = episodeNumber <= 1;
+            document.getElementById('next-btn').disabled = episodeNumber >= Object.keys(episodes).length;
+        }
+
+        function navigateEpisode(offset) {
+            const currentEpisode = parseInt(window.location.hash.substring(1), 10) || 1;
+            const newEpisode = currentEpisode + offset;
+            if (newEpisode >= 1 && newEpisode <= Object.keys(episodes).length) {
+                window.location.hash = `#${newEpisode}`;
+                window.location.reload();  // Reload the page to update the video
+            }
+        }
+
+        window.addEventListener('hashchange', loadEpisode);
     </script>
 </body>
 </html>
-
