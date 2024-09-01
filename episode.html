@@ -3,98 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Episode Viewer</title>
+    <title>Episode</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            text-align: center;
+            padding: 20px;
         }
-        #episode-title {
-            margin-top: 10px;
-            font-size: 24px;
-            font-weight: bold;
+        h1 {
+            margin-bottom: 20px;
         }
         iframe {
             width: 100%;
-            height: 60vh;
-            max-width: 800px;
+            height: 500px;
             border: none;
-            margin-top: 10px;
+            margin-bottom: 20px;
         }
-        #controls {
-            margin-top: 10px;
+        .controls {
             display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 800px;
-        }
-        #controls button {
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-        #episode-list {
+            justify-content: center;
+            gap: 20px;
             margin-top: 20px;
-            text-align: center;
         }
-        @media (max-width: 768px) {
-            iframe {
-                height: 40vh;
-            }
+        .controls a {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .controls a.disabled {
+            background-color: #cccccc;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="episode-title">Episode 1</div>
-    <iframe id="episode-frame" src="" allowfullscreen></iframe>
-    <div id="controls">
-        <button id="prev-btn" onclick="navigateEpisode(-1)">Previous Episode</button>
-        <button id="next-btn" onclick="navigateEpisode(1)">Next Episode</button>
+    <h1 id="episode-title">Episode #</h1>
+    <iframe id="episode-frame"></iframe>
+
+    <div class="controls">
+        <a id="prev-episode" href="#" class="disabled">Previous Episode</a>
+        <a id="episode-list" href="index.html">Episode List</a>
+        <a id="next-episode" href="#" class="disabled">Next Episode</a>
     </div>
-    <div id="episode-list"><a href="index.html">Back to Episode List</a></div>
 
     <script>
-        const episodes = {}; // Data will be loaded here
+        // Mendapatkan ID dari hash
+        const episodeId = window.location.hash.substring(1);
+        const episodeTitle = document.getElementById('episode-title');
+        const episodeFrame = document.getElementById('episode-frame');
+        const prevEpisode = document.getElementById('prev-episode');
+        const nextEpisode = document.getElementById('next-episode');
 
-        // Fetch data from links.json
-        fetch('links.json')
+        // Mengambil data dari data.json
+        fetch('data.json')
             .then(response => response.json())
             .then(data => {
-                Object.assign(episodes, data);
-                loadEpisode();
-            })
-            .catch(error => console.error('Error loading episode data:', error));
+                if (data[episodeId]) {
+                    // Menampilkan nomor episode
+                    episodeTitle.textContent = `Episode #${episodeId}`;
 
-        function loadEpisode() {
-            const hash = window.location.hash.substring(1);
-            const episodeNumber = parseInt(hash, 10) || 1;
-            const episodeUrl = episodes[episodeNumber];
+                    // Menampilkan iframe
+                    episodeFrame.src = data[episodeId];
 
-            if (episodeUrl) {
-                document.getElementById('episode-title').textContent = `Episode ${episodeNumber}`;
-                document.getElementById('episode-frame').src = episodeUrl;
-                updateButtons(episodeNumber);
-            }
-        }
+                    // Mengatur tombol previous dan next
+                    if (data[parseInt(episodeId) - 1]) {
+                        prevEpisode.href = `episode.html#${parseInt(episodeId) - 1}`;
+                        prevEpisode.classList.remove('disabled');
+                    }
+                    if (data[parseInt(episodeId) + 1]) {
+                        nextEpisode.href = `episode.html#${parseInt(episodeId) + 1}`;
+                        nextEpisode.classList.remove('disabled');
+                    }
+                } else {
+                    episodeTitle.textContent = 'Episode Not Found';
+                    episodeFrame.style.display = 'none';
+                }
+            });
 
-        function updateButtons(episodeNumber) {
-            document.getElementById('prev-btn').disabled = episodeNumber <= 1;
-            document.getElementById('next-btn').disabled = episodeNumber >= Object.keys(episodes).length;
-        }
-
-        function navigateEpisode(offset) {
-            const currentEpisode = parseInt(window.location.hash.substring(1), 10) || 1;
-            const newEpisode = currentEpisode + offset;
-            if (newEpisode >= 1 && newEpisode <= Object.keys(episodes).length) {
-                window.location.hash = `#${newEpisode}`;
-                window.location.reload();  // Reload the page to update the video
-            }
-        }
-
-        window.addEventListener('hashchange', loadEpisode);
+        // Memaksa refresh saat pindah hash
+        window.addEventListener('hashchange', () => {
+            location.reload();
+        });
     </script>
 </body>
 </html>
