@@ -91,11 +91,17 @@
                             const episodeNumber = parseInt(episodeId, 10);
                             if (episodeNumber > 1) {
                                 prevBtn.disabled = false;
-                                prevBtn.onclick = () => window.location.hash = `#${episodeNumber - 1}`;
+                                prevBtn.onclick = () => {
+                                    window.location.hash = `#${episodeNumber - 1}`;
+                                    window.location.reload();
+                                };
                             }
                             if (episodeNumber < 48) {
                                 nextBtn.disabled = false;
-                                nextBtn.onclick = () => window.location.hash = `#${episodeNumber + 1}`;
+                                nextBtn.onclick = () => {
+                                    window.location.hash = `#${episodeNumber + 1}`;
+                                    window.location.reload();
+                                };
                             }
                         } else {
                             document.getElementById('videoFrame').innerHTML = 'Episode tidak ditemukan';
