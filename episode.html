@@ -9,112 +9,142 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            justify-content: flex-start;
+            background-color: #f0f0f0;
         }
+
+        #episode-title {
+            margin: 20px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
         iframe {
             width: 80%;
-            height: 60vh;
+            height: 50vh;
             border: none;
-            margin-bottom: 20px;
+            margin-top: 10px;
         }
+
         .controls {
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
             width: 80%;
-            margin-bottom: 20px;
         }
+
         .controls button {
-            background-color: #007bff;
-            color: white;
-            border: none;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
         }
+
         .controls button:disabled {
-            background-color: #a0a0a0;
+            background-color: #ccc;
             cursor: not-allowed;
         }
-        .episode-list {
-            list-style: none;
-            padding: 0;
-            text-align: center;
+
+        .controls .episode-list {
+            margin: 0 10px;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         .episode-list a {
             text-decoration: none;
+            font-size: 16px;
             color: #007bff;
-            font-size: 18px;
-            margin: 0 10px;
         }
-        .episode-list a:hover {
-            text-decoration: underline;
+
+        /* Responsive adjustments */
+        @media only screen and (max-width: 768px) {
+            iframe {
+                width: 100%;
+                height: 60vh;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .controls button, .episode-list a {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .episode-list {
+                order: -1;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <iframe id="videoFrame" src="" allowfullscreen></iframe>
 
-        <div class="controls">
-            <button id="prevBtn" disabled>Previous Episode</button>
-            <button id="nextBtn" disabled>Next Episode</button>
-        </div>
+    <div id="episode-title">Episode 1</div>
+    <iframe id="episode-frame" src=""></iframe>
 
-        <ul class="episode-list">
-            <li><a href="index.html">Back to List</a></li>
-        </ul>
+    <div class="controls">
+        <button id="prev-btn">Previous Episode</button>
+        <div class="episode-list"><a href="index.html">List of Episodes</a></div>
+        <button id="next-btn">Next Episode</button>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const episodeId = window.location.hash.substring(1);
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
+        const hash = window.location.hash.substring(1);
+        const episodeNumber = parseInt(hash) || 1;
+        const iframe = document.getElementById('episode-frame');
+        const episodeTitle = document.getElementById('episode-title');
 
-            if (episodeId) {
-                fetch('data.json')
-                    .then(response => response.json())
-                    .then(data => {
-                        const driveUrl = data[episodeId];
-                        if (driveUrl) {
-                            const fileId = driveUrl.split('/d/')[1].split('/')[0];
-                            document.getElementById('videoFrame').src = `https://drive.google.com/file/d/${fileId}/preview`;
+        // Fetch data from data.json
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const episodeData = data[episodeNumber];
 
-                            // Handle Previous and Next buttons
-                            const episodeNumber = parseInt(episodeId, 10);
-                            if (episodeNumber > 1) {
-                                prevBtn.disabled = false;
-                                prevBtn.onclick = () => {
-                                    window.location.hash = `#${episodeNumber - 1}`;
-                                    window.location.reload();
-                                };
-                            }
-                            if (episodeNumber < 48) {
-                                nextBtn.disabled = false;
-                                nextBtn.onclick = () => {
-                                    window.location.hash = `#${episodeNumber + 1}`;
-                                    window.location.reload();
-                                };
-                            }
-                        } else {
-                            document.getElementById('videoFrame').innerHTML = 'Episode tidak ditemukan';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading data.json:', error);
-                        document.getElementById('videoFrame').innerHTML = 'Terjadi kesalahan';
-                    });
-            } else {
-                document.getElementById('videoFrame').innerHTML = 'ID episode tidak valid';
-            }
-        });
+                if (episodeData) {
+                    // Update iframe and title based on the current episode
+                    iframe.src = episodeData.url.replace("/view", "/preview");
+                    episodeTitle.textContent = `Episode ${episodeNumber}`;
+                } else {
+                    episodeTitle.textContent = `Episode not found`;
+                }
+
+                // Button actions
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+
+                prevBtn.disabled = episodeNumber <= 1;
+                nextBtn.disabled = episodeNumber >= Object.keys(data).length;
+
+                prevBtn.addEventListener('click', () => {
+                    if (episodeNumber > 1) {
+                        window.location.hash = `#${episodeNumber - 1}`;
+                        window.location.reload(); // Refresh to load the new video
+                    }
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    if (episodeNumber < Object.keys(data).length) {
+                        window.location.hash = `#${episodeNumber + 1}`;
+                        window.location.reload(); // Refresh to load the new video
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                episodeTitle.textContent = 'Error loading episode data';
+            });
     </script>
 </body>
 </html>
+
