@@ -11,87 +11,113 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
             margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
         }
-        h1 {
+        .episode-title {
             margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
             text-align: center;
         }
         iframe {
-            width: 90%;
+            margin-top: 10px;
+            width: 100%;
             height: 60vh;
-            margin-bottom: 20px;
             border: none;
         }
         .controls {
+            margin-top: 10px;
             display: flex;
             justify-content: space-between;
-            width: 90%;
-            margin-top: 10px;
+            width: 60%;
         }
-        .controls button:disabled {
-            opacity: 0.5;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:disabled {
+            background-color: #cccccc;
             cursor: not-allowed;
         }
-        .controls .episode-list {
-            margin: 0 auto;
+        .episode-list {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .episode-list a {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
-
-    <h1 id="episode-title">Episode #</h1>
-    <iframe id="video-player" src="" allowfullscreen></iframe>
-    
+    <div class="episode-title" id="episode-title">Episode </div>
+    <iframe id="episode-iframe"></iframe>
     <div class="controls">
-        <button id="prev-button">Previous Episode</button>
-        <a href="index.html" class="episode-list">Episode List</a>
+        <button id="prev-button" disabled>Previous Episode</button>
         <button id="next-button">Next Episode</button>
+    </div>
+    <div class="episode-list">
+        <a href="index.html">Back to Episode List</a>
     </div>
 
     <script>
-        // Ambil hash dari URL
-        const hash = window.location.hash.substring(1);
         const episodeTitle = document.getElementById('episode-title');
-        const iframe = document.getElementById('video-player');
+        const episodeIframe = document.getElementById('episode-iframe');
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
-        
-        // Load data.json
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
-                // Set episode title and iframe source based on hash
-                if (data[hash]) {
-                    episodeTitle.textContent = `Episode ${hash}`;
-                    iframe.src = data[hash];
-                } else {
-                    episodeTitle.textContent = 'Episode not found';
-                    iframe.src = '';
-                }
 
-                // Disable previous button if on the first episode
-                if (parseInt(hash) === 1) {
-                    prevButton.disabled = true;
-                } else {
-                    prevButton.addEventListener('click', () => {
-                        window.location.hash = `#${parseInt(hash) - 1}`;
-                        window.location.reload();
-                    });
-                }
+        // Function to fetch data.json and update episode information
+        function loadEpisode() {
+            const episodeId = window.location.hash.substring(1);
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    if (data[episodeId]) {
+                        // Update title
+                        episodeTitle.textContent = `Episode ${episodeId}`;
 
-                // Disable next button if on the last episode
-                if (parseInt(hash) === Object.keys(data).length) {
-                    nextButton.disabled = true;
-                } else {
-                    nextButton.addEventListener('click', () => {
-                        window.location.hash = `#${parseInt(hash) + 1}`;
-                        window.location.reload();
-                    });
-                }
-            });
+                        // Update iframe source
+                        episodeIframe.src = data[episodeId];
+
+                        // Update button states
+                        prevButton.disabled = (parseInt(episodeId) === 1);
+                        nextButton.disabled = (parseInt(episodeId) === Object.keys(data).length);
+                    }
+                });
+        }
+
+        // Event listeners for buttons
+        prevButton.addEventListener('click', () => {
+            const currentEpisode = parseInt(window.location.hash.substring(1));
+            if (currentEpisode > 1) {
+                window.location.hash = `#${currentEpisode - 1}`;
+                location.reload(); // Refresh page to load the new episode
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            const currentEpisode = parseInt(window.location.hash.substring(1));
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    if (currentEpisode < Object.keys(data).length) {
+                        window.location.hash = `#${currentEpisode + 1}`;
+                        location.reload(); // Refresh page to load the new episode
+                    }
+                });
+        });
+
+        // Initial load
+        window.addEventListener('hashchange', loadEpisode);
+        loadEpisode();
     </script>
-
 </body>
 </html>
