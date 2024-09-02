@@ -19,11 +19,11 @@
             min-height: 100vh;
         }
         iframe {
-            width: 80%;
-            height: 60vh;
-            border: none;
-            margin-bottom: 20px;
-            margin-top: 20px;
+            width: 100%; /* Sesuaikan dengan lebar layar */
+            height: calc(100vw * 9 / 16); /* Menjaga rasio 16:9 berdasarkan lebar layar */
+            max-height: 80vh; /* Membatasi tinggi maksimum agar tidak melebihi 80% tinggi layar */
+            display: block;
+            margin: 0 auto; /* Memusatkan iframe */
         }
         .controls {
             display: flex;
